@@ -1,0 +1,294 @@
+﻿Exportfile for AOT version 1.0 or later
+Formatversion: 1
+
+***Element: FRM
+
+; Microsoft Dynamics AX Forms unloaded
+; --------------------------------------------------------------------------------
+FRMVERSION 12
+
+FORM #formDrawTest
+  PROPERTIES
+    Name                #formDrawTest
+    Origin              #{F20BDE6F-9AFB-44D0-8748-6832AB63B204}
+  ENDPROPERTIES
+  
+  METHODS
+    SOURCE #close
+      #public void close()
+      #{
+      #    interopPermission clrinteropPermission          = new InteropPermission(InteropKind::ClrInterop);
+      #    clrinteropPermission.assert();
+      #
+      #    super();
+      #
+      #    buffer.Dispose();
+      #
+      #    CodeAccessPermission::revertAssert();
+      #
+      #}
+    ENDSOURCE
+    SOURCE #init
+      #public void init()
+      #{
+      #    super();
+      #
+      #    this.initDLL();
+      #}
+    ENDSOURCE
+    SOURCE #initDLL
+      #private void initDLL()
+      #{
+      #    interopPermission interopPermission             = new InteropPermission(InteropKind::DllInterop);
+      #    ;
+      #    interopPermission.assert();
+      #
+      #    //Initialize DLL functions
+      #    DLLGDI      = new DLL('GDI32');
+      #    dllcreatecompdc = new DLLFunction(DLLGDI, 'CreateCompatibleDC');
+      #    dllcreatecompdc.returns(ExtTypes::DWord);
+      #    dllcreatecompdc.arg(ExtTypes::DWord);
+      #    dllselectObject = new DLLFunction(DLLGDI, 'SelectObject');
+      #    dllselectObject.returns(ExtTypes::DWord);
+      #    dllselectObject.arg(ExtTypes::DWord,ExtTypes::DWord);
+      #    dlldeleteObject = new DLLFunction(DLLGDI, 'DeleteObject');
+      #    dlldeleteObject.returns(ExtTypes::DWord);
+      #    dlldeleteObject.arg(ExtTypes::DWord);
+      #
+      #    CodeAccessPermission::revertAssert();
+      #}
+    ENDSOURCE
+    SOURCE #run
+      #public void run()
+      #{
+      #    int w = Wnd.widthValue();
+      #    int h = Wnd.heightValue();
+      #    interopPermission clrinteropPermission          = new InteropPermission(InteropKind::ClrInterop);
+      #    clrinteropPermission.assert();
+      #
+      #    super();
+      #
+      #    buffer = new System.Drawing.Bitmap(w, h);
+      #
+      #    CodeAccessPermission::revertAssert();
+      #
+      #}
+    ENDSOURCE
+    SOURCE #draw
+      #public void draw()
+      #{
+      #    #wingdi
+      #
+      #    int i,j;
+      #    System.IntPtr hptr;
+      #    WinGDI gdi;
+      #    System.Drawing.Graphics         netWnd;
+      #    Set     permissionSet;
+      #    ;
+      #
+      #    permissionSet =  new Set(Types::Class);
+      #    permissionSet.add(new InteropPermission(InteropKind::DllInterop));
+      #    permissionSet.add(new InteropPermission(InteropKind::ClrInterop));
+      #    CodeAccessPermission::assertMultiple(permissionSet);
+      #
+      #    Wnd.lockDC();
+      #    gdi = new WinGDI(Wnd.hDC());
+      #
+      #    hptr = buffer.GetHbitmap();
+      #    i = hptr.ToInt32();
+      #
+      #    j = dllcreatecompdc.call(Wnd.hDC());
+      #
+      #    dllselectobject.call(j, i);
+      #
+      #    gdi.bitBlt(0, 0, buffer.get_Width(), buffer.get_Height(), j, 0, 0, #SRCCOPY);
+      #
+      #    Wnd.unlockDC();
+      #
+      #    dlldeleteobject.call(j);
+      #    dlldeleteobject.call(i);
+      #
+      #
+      #    CodeAccessPermission::revertAssert();
+      #}
+    ENDSOURCE
+    SOURCE #classDeclaration
+      #public class FormRun extends ObjectRun
+      #{
+      #    System.Drawing.Bitmap       buffer;
+      #
+      #    DLL             DLLGDI;
+      #    DLLFunction     dllcreatecompdc;
+      #    DLLFunction     dllselectObject;
+      #    DLLFunction     dlldeleteObject;
+      #
+      #}
+    ENDSOURCE
+  ENDMETHODS
+  OBJECTBANK
+    PROPERTIES
+    ENDPROPERTIES
+    
+  ENDOBJECTBANK
+  
+  REFERENCEDATASOURCES
+  ENDREFERENCEDATASOURCES
+  
+  JOINS
+  ENDJOINS
+  
+  PARTREFERENCES
+  ENDPARTREFERENCES
+  
+  DESIGN
+    PROPERTIES
+    ENDPROPERTIES
+    
+    CONTAINER
+      CONTROL WINDOW
+        PROPERTIES
+          Name                #Wnd
+          AutoDeclaration     #Yes
+          AllowEdit           #No
+          Width               #Column width
+          Height              #Column height
+          Skip                #Yes
+          AlignControl        #No
+          ElementPosition     #1073741823
+          ColorScheme         #RGB
+          BackgroundColor     #255 255 255
+          ForegroundColor     #255 255 255
+          LabelForegroundColor #255 255 255
+          ShowLabel           #No
+        ENDPROPERTIES
+        
+        METHODS
+          SOURCE #mouseMove
+            #public int mouseMove(int _x, int _y, int _button, boolean _Ctrl, boolean _Shift)
+            #{
+            #    int ret;
+            #    System.Drawing.Graphics     graphics;
+            #    interopPermission clrinteropPermission          = new InteropPermission(InteropKind::ClrInterop);
+            #    ;
+            #
+            #    ret = super(_x, _y, _button, _Ctrl, _Shift);
+            #
+            #    if(_button == 1)
+            #    {
+            #        clrinteropPermission.assert();
+            #
+            #        graphics = System.Drawing.Graphics::FromImage(buffer);
+            #
+            #        graphics.FillEllipse(System.Drawing.Brushes::get_Black(), _x, _y,  4, 4);
+            #
+            #        graphics.Dispose();
+            #
+            #        Wnd.paint();
+            #        CodeAccessPermission::revertAssert();
+            #
+            #    }
+            #
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+          SOURCE #paint
+            #public int paint()
+            #{
+            #    int ret;
+            #
+            #    //ret = super();
+            #    element.draw();
+            #
+            #    return ret;
+            #}
+          ENDSOURCE
+        ENDMETHODS
+      ENDCONTROL 
+      
+    ENDCONTAINER
+    
+  ENDDESIGN
+  
+  PERMISSIONS #Permissions
+    PROPERTIES
+    ENDPROPERTIES
+    
+    PERMISSIONSET #Read
+      PROPERTIES
+      ENDPROPERTIES
+      
+      FORM #Controls
+      ENDFORM
+      
+    TABLES #Tables
+    ENDTABLES
+    
+  SERVERMETHODS #Server Methods
+  ENDSERVERMETHODS
+  
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Update
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Create
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+PERMISSIONSET #Delete
+  PROPERTIES
+  ENDPROPERTIES
+  
+  FORM #Controls
+  ENDFORM
+  
+TABLES #Tables
+ENDTABLES
+
+SERVERMETHODS #Server Methods
+ENDSERVERMETHODS
+
+ASSOCIATEDFORMS #Associated Forms
+ENDASSOCIATEDFORMS
+
+ENDPERMISSIONSET
+
+ENDPERMISSIONS
+
+ENDFORM
+
+
+***Element: END
